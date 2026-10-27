@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import math
@@ -1737,7 +1738,7 @@ async def process_content(
             # Use get_readers() to ensure we get a dict (handles list conversion)
             custom_readers = knowledge.get_readers()
             if custom_readers and reader_id in custom_readers:
-                reader = custom_readers[reader_id]
+                reader = copy.copy(custom_readers[reader_id])
                 log_debug(f"Found custom reader: {reader.__class__.__name__}")
             else:
                 # Try to resolve from factory readers
@@ -1755,6 +1756,9 @@ async def process_content(
             else:
                 log_debug(f"Could not resolve reader with id: {reader_id}")
         if chunker and content.reader:
+            # Apply the per-request chunker to a shallow copy so readers held by the
+            # knowledge base are not mutated for subsequent uploads.
+            content.reader = copy.copy(content.reader)
             # Set the chunker name on the reader - let the reader handle it internally
             content.reader.set_chunking_strategy_from_string(chunker, chunk_size=chunk_size, overlap=chunk_overlap)
             log_debug(f"Set chunking strategy: {chunker}")
