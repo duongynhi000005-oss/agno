@@ -28,6 +28,7 @@ class ExaTools(Toolkit):
         text (bool): Retrieve text content from results. Default is True.
         text_length_limit (int): Max length of text content per result. Default is 1000.
         api_key (Optional[str]): Exa API key. Retrieved from `EXA_API_KEY` env variable if not provided.
+        base_url (Optional[str]): Custom base URL for the Exa API client. Retrieved from `EXA_BASE_URL` env variable if not provided.
         num_results (Optional[int]): Default number of search results. Overrides individual searches if set.
         start_crawl_date (Optional[str]): Include results crawled on/after this date (`YYYY-MM-DD`).
         end_crawl_date (Optional[str]): Include results crawled on/before this date (`YYYY-MM-DD`).
@@ -54,6 +55,7 @@ class ExaTools(Toolkit):
         text_length_limit: int = 1000,
         summary: bool = False,
         api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
         num_results: Optional[int] = None,
         livecrawl: str = "always",
         start_crawl_date: Optional[str] = None,
@@ -74,7 +76,8 @@ class ExaTools(Toolkit):
         if not self.api_key:
             log_error("EXA_API_KEY not set. Please set the EXA_API_KEY environment variable.")
 
-        self.exa = Exa(self.api_key)
+        self.base_url: Optional[str] = base_url or getenv("EXA_BASE_URL")
+        self.exa = Exa(self.api_key, base_url=self.base_url) if self.base_url else Exa(self.api_key)
         self.show_results = show_results
         self.timeout = timeout
 

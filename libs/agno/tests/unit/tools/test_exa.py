@@ -48,9 +48,42 @@ def create_mock_search_result(
 def test_init_with_api_key():
     """Test initialization with provided API key."""
     with patch("agno.tools.exa.Exa") as mock_exa:
-        with patch.dict("os.environ", {"EXA_API_KEY": "test_key"}):
-            ExaTools()
+        with patch.dict("os.environ", {"EXA_API_KEY": "test_key"}, clear=True):
+            tools = ExaTools()
+            assert tools.base_url is None
             mock_exa.assert_called_once_with("test_key")
+
+
+def test_init_with_base_url_argument():
+    """Test initialization with explicit base_url argument."""
+    with patch("agno.tools.exa.Exa") as mock_exa:
+        with patch.dict("os.environ", {"EXA_API_KEY": "test_key"}, clear=True):
+            tools = ExaTools(base_url="https://exa-proxy.internal/v1")
+            assert tools.base_url == "https://exa-proxy.internal/v1"
+            mock_exa.assert_called_once_with("test_key", base_url="https://exa-proxy.internal/v1")
+
+
+def test_init_with_base_url_env_var():
+    """Test initialization with EXA_BASE_URL environment variable and explicit argument precedence."""
+    with patch("agno.tools.exa.Exa") as mock_exa:
+        with patch.dict(
+            "os.environ",
+            {"EXA_API_KEY": "test_key", "EXA_BASE_URL": "https://env-exa-proxy.internal"},
+            clear=True,
+        ):
+            tools = ExaTools()
+            assert tools.base_url == "https://env-exa-proxy.internal"
+            mock_exa.assert_called_once_with("test_key", base_url="https://env-exa-proxy.internal")
+
+    with patch("agno.tools.exa.Exa") as mock_exa:
+        with patch.dict(
+            "os.environ",
+            {"EXA_API_KEY": "test_key", "EXA_BASE_URL": "https://env-exa-proxy.internal"},
+            clear=True,
+        ):
+            tools = ExaTools(base_url="https://arg-exa-proxy.internal")
+            assert tools.base_url == "https://arg-exa-proxy.internal"
+            mock_exa.assert_called_once_with("test_key", base_url="https://arg-exa-proxy.internal")
 
 
 def test_init_with_selective_tools():
